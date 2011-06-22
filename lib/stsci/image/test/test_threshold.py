@@ -2,7 +2,7 @@
 import numpy as np
 import nose
 from nose.tools import *
-from image import combine
+from stsci.image import combine
 
 def test_threshhold1():
     """

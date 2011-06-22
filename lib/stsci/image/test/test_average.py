@@ -2,11 +2,11 @@
 import numpy as np
 import nose
 from nose.tools import *
-from image import combine
+from stsci.image import combine
 
-def test_minimum1():
+def test_average1():
     """
-    minimum() nominally computes the minimum pixel value for a stack of
+    average() nominally computes the average pixel value for a stack of
     identically shaped images.
 
     arrays     specifies a sequence of inputs arrays, which are nominally a
@@ -19,67 +19,68 @@ def test_minimum1():
     outtype    specifies the type of the output array when no 'output' is
                specified.
 
-    nlow       specifies the number of pixels to be excluded from minimum
+    nlow       specifies the number of pixels to be excluded from average
                on the low end of the pixel stack.
 
-    nhigh      specifies the number of pixels to be excluded from minimum
+    nhigh      specifies the number of pixels to be excluded from average
                on the high end of the pixel stack.
 
     badmasks   specifies boolean arrays corresponding to 'arrays', where true
                indicates that a particular pixel is not to be included in the
-               minimum calculation.
+               average calculation.
     """
     a = np.arange(4)
     a = a.reshape((2,2))
     arrays = [a*16, a*4, a*2, a*8]
-    result = combine.minimum(arrays)
-    test = np.array([[0, 2],
-           [4, 6]])
+    result = combine.average(arrays)
+    test = np.array([[ 0,  7],
+           [15, 22]])
     assert_equal(result.all(),test.all())
 
-def test_minimum2():
+def test_average2():
     a = np.arange(4)
     a = a.reshape((2,2))
     arrays = [a*16, a*4, a*2, a*8]
-    result = combine.minimum(arrays, nhigh=1)
-    test = np.array([[0, 2],
-           [4, 6]])
-    assert_equal(result.all(),test.all())
-
-def test_minimum3():
-    a = np.arange(4)
-    a = a.reshape((2,2))
-    arrays = [a*16, a*4, a*2, a*8]
-    result = combine.minimum(arrays, nlow=1)
+    result = combine.average(arrays, nhigh=1)
     test = np.array([[ 0,  4],
-           [ 8, 12]])
+           [ 9, 14]])
     assert_equal(result.all(),test.all())
 
-def test_minimum4():
+def test_average3():
     a = np.arange(4)
     a = a.reshape((2,2))
     arrays = [a*16, a*4, a*2, a*8]
-    result = combine.minimum(arrays, outtype=np.float32)
-    test = np.array([[ 0.,  2.],
-           [ 4.,  6.]], dtype=np.float32)
+    result = combine.average(arrays, nlow=1)
+    test = np.array([[ 0,  9],
+           [18, 28]])
     assert_equal(result.all(),test.all())
 
-def test_minimum5():
+def test_average4():
+    a = np.arange(4)
+    a = a.reshape((2,2))
+    arrays = [a*16, a*4, a*2, a*8]
+    result = combine.average(arrays, outtype=np.float32)
+    test = np.array([[  0. ,   7.5],
+           [ 15. ,  22.5]], dtype=np.float32)
+    assert_equal(result.all(),test.all())
+
+def test_average5():
     a = np.arange(4)
     a = a.reshape((2,2))
     arrays = [a*16, a*4, a*2, a*8]
     bm = np.zeros((4,2,2), dtype=np.bool8)
     bm[2,...] = 1
-    result = combine.minimum(arrays, badmasks=bm)
-    test = np.array([[ 0,  4],
-           [ 8, 12]])
+    result = combine.average(arrays, badmasks=bm)
+    test = np.array([[ 0,  9],
+           [18, 28]])
     assert_equal(result.all(),test.all())
 
-def test_minimum6():
+def test_average6():
     a = np.arange(4)
     a = a.reshape((2,2))
     arrays = [a*16, a*4, a*2, a*8]
-    result = combine.minimum(arrays, badmasks=combine.threshhold(arrays, low=10))
-    test = np.array([[ 0, 16],
-           [16, 12]])
+    result = combine.average(arrays, badmasks=combine.threshhold(arrays, high=25))
+    test = np.array([[ 0,  7],
+           [ 9, 14]])
     assert_equal(result.all(),test.all())
+

@@ -1,8 +1,8 @@
 from __future__ import division
 
 import numpy as num
-import convolve
-import convolve._correlate as _correlate
+import stsci.convolve as convolve
+import stsci.convolve._correlate as _correlate
 MLab=num
 
 def _translate(a, dx, dy, output=None, mode="nearest", cval=0.0):
