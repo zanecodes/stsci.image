@@ -6,7 +6,9 @@ import stsci.convolve._correlate as _correlate
 
 
 def _translate(a, dx, dy, output=None, mode="nearest", cval=0.0):
-    """_translate does positive sub-pixel shifts using bilinear interpolation."""
+    """_translate does positive sub-pixel shifts using bilinear
+    interpolation.
+    """
 
     assert 0 <= dx < 1.0
     assert 0 <= dy < 1.0
@@ -33,9 +35,11 @@ def translate(a, sdx, sdy, output=None, mode="nearest", cval=0.0):
     supported 'mode's include:
         'nearest'   elements beyond boundary come from nearest edge pixel.
         'wrap'      elements beyond boundary come from the opposite array edge.
-        'reflect'   elements beyond boundary come from reflection on same array edge.
+        'reflect'   elements beyond boundary come from reflection on same array
+                    edge.
         'constant'  elements beyond boundary are set to 'cval'
     """
+
     a = np.asarray(a)
 
     sdx, sdy = -sdx, -sdy     # Flip sign to match IRAF sign convention

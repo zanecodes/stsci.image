@@ -13,25 +13,31 @@
 #      Version 0.2.0: Added error checking to ensure that for min/max clipping,
 #                     more values are not being eliminated than are avilable in
 #                     the image stack. Also, a list of masks can now be accepted
-#                     as input and applied to the imput image list in addition to
-#                     any internal clipping that occurs.-- CJH -- 01/12/04
-#      Version 0.2.1: Added the nkeep parameter.  This parameter defines the minimum
-#                     number of pixels to be kept in the calculation after clipping
-#                     the high and low pixels.
-#      Version 0.2.2: Added support for creating a "sum" array.  -- CJH -- 05/17/04
-#      Version 0.2.3: Fixed syntax error in _createMaskList method.  -- CJH -- 06/01/04
+#                     as input and applied to the imput image list in addition
+#                     to any internal clipping that occurs.-- CJH -- 01/12/04
+#      Version 0.2.1: Added the nkeep parameter.  This parameter defines the
+#                     minimum number of pixels to be kept in the calculation
+#                     after clipping the high and low pixels.
+#      Version 0.2.2: Added support for creating a "sum" array.
+#                     -- CJH -- 05/17/04
+#      Version 0.2.3: Fixed syntax error in _createMaskList method.
+#                     -- CJH -- 06/01/04
 #      Version 0.2.4: Removed diagnostic print statements.  -- CJH -- 06/28/04
-#      Version 0.3.0: Added support for a computing a clipped minimum array. This is based upon
-#                     the minimum function in numarray.images.combine that Todd Miller has
-#                     implemented for numarray 1.3. -- CJH -- 03/30/05
-#      Version 0.4.0: Modified numcombine to use the numerix interface.  This allows for the use
-#                     of either the numarray or numpy array packages. -- CJH -- 08/18/06
+#      Version 0.3.0: Added support for a computing a clipped minimum array.
+#                     This is based upon the minimum function in
+#                     numarray.images.combine that Todd Miller has implemented
+#                     for numarray 1.3. -- CJH -- 03/30/05
+#      Version 0.4.0: Modified numcombine to use the numerix interface.  This
+#                     allows for the use of either the numarray or numpy array
+#                     packages. -- CJH -- 08/18/06
 #
 
 # Import necessary modules
 from __future__ import division
 
 from stsci.tools import numerixenv
+from stsci.tools.textutil import textbox
+
 numerixenv.check()
 
 import numpy as n
@@ -40,7 +46,8 @@ import stsci.image as image
 # Version number
 __version__ = '0.4.0'
 
-class numCombine:
+
+class numCombine(object):
     """ A lite version of the imcombine IRAF task"""
 
     def __init__(self,

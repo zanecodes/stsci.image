@@ -1,11 +1,11 @@
 from __future__ import division
 
 import numpy as num
-from _combine import combine as _comb
-import operator as _operator
+from ._combine import combine as _combine
 
 
-def _combine_f(funcstr, arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
+def _combine_f(funcstr, arrays, output=None, outtype=None, nlow=0, nhigh=0,
+               badmasks=None):
     arrays = [ num.asarray(a) for a in arrays ]
     shape = arrays[0].shape
     if output is None:
@@ -18,11 +18,12 @@ def _combine_f(funcstr, arrays, output=None, outtype=None, nlow=0, nhigh=0, badm
     for a in tuple(arrays[1:])+(out,):
         if a.shape != shape:
             raise ValueError("all arrays must have identical shapes")
-    _comb(arrays, out, nlow, nhigh, badmasks, funcstr)
+    _combine(arrays, out, nlow, nhigh, badmasks, funcstr)
     if output is None:
         return out
 
-def median( arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
+
+def median(arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
     """median() nominally computes the median pixels for a stack of
     identically shaped images.
 
@@ -70,9 +71,11 @@ def median( arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
     array([[ 0,  6],
            [ 8, 12]])
     """
+
     return _combine_f("median", arrays, output, outtype, nlow, nhigh, badmasks)
 
-def average( arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
+
+def average(arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
     """average() nominally computes the average pixel value for a stack of
     identically shaped images.
 
@@ -121,9 +124,11 @@ def average( arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
            [ 9, 14]])
 
     """
-    return _combine_f("average", arrays, output, outtype, nlow, nhigh, badmasks)
 
-def minimum( arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
+    return _combine_f("average", arrays, output, outtype, nlow, nhigh,
+                      badmasks)
+
+def minimum(arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
     """minimum() nominally computes the minimum pixel value for a stack of
     identically shaped images.
 
@@ -172,7 +177,10 @@ def minimum( arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
            [16, 12]])
 
     """
-    return _combine_f("minimum", arrays, output, outtype, nlow, nhigh, badmasks)
+
+    return _combine_f("minimum", arrays, output, outtype, nlow, nhigh,
+                      badmasks)
+
 
 def threshhold(arrays, low=None, high=None, outputs=None):
     """threshhold() computes a boolean array 'outputs' with
@@ -252,6 +260,7 @@ def threshhold(arrays, low=None, high=None, outputs=None):
 
     if outputs is None:
         return outs
+
 
 def _bench():
     """time a 10**6 element median"""
