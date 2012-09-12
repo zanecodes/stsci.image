@@ -31,6 +31,7 @@
 #                     allows for the use of either the numarray or numpy array
 #                     packages. -- CJH -- 08/18/06
 #
+#      Version 0.5.0: Added imedian and iaverage functions. -- WJH -- 01/20/12
 
 # Import necessary modules
 from __future__ import division
@@ -44,7 +45,7 @@ import numpy as n
 import stsci.image as image
 
 # Version number
-__version__ = '0.4.0'
+__version__ = '0.5.0'
 
 
 class numCombine(object):
@@ -96,6 +97,11 @@ class numCombine(object):
         # Combine the input images.
         if ( self.__combinationType.lower() == "median"):
             self._median()
+        elif ( self.__combinationType.lower() == "imedian" ):
+            self._imedian()
+        elif ( self.__combinationType.lower() == "iaverage"  or 
+                self.__combinationType.lower() == "imean" ):
+            self._iaverage()
         elif ( self.__combinationType.lower() == "mean" ):
             self._average()
         elif ( self.__combinationType.lower() == "sum" ):
@@ -126,6 +132,18 @@ class numCombine(object):
             for mask in xrange(len(self.__numarrayMaskList)):
                 self.__masks.append(n.logical_or(__tmpMaskList[mask],self.__numarrayMaskList[mask]))
         del (__tmpMaskList)
+        return None
+
+    def _imedian(self):
+        # Create a median image.
+        #print "*  Creating a median array..."
+        image.imedian(self.__numarrayObjectList,self.combArrObj,nlow=self.__nlow,nhigh=self.__nhigh,badmasks=self.__masks)
+        return None
+
+    def _iaverage(self):
+        # Create an average image.
+        #print "*  Creating a mean array..."
+        image.iaverage(self.__numarrayObjectList,self.combArrObj,nlow=self.__nlow,nhigh=self.__nhigh,badmasks=self.__masks)
         return None
 
     def _median(self):

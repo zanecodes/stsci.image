@@ -6,12 +6,12 @@
 static PyObject *_Error;
 
 
-typedef npy_float64 (*combiner)(int, int, int, npy_float64 temp[MAX_ARRAYS]);
+typedef npy_float64 (*combiner)(int, int, int, int, npy_float64 temp[MAX_ARRAYS]);
 
 
 static int
-_mask_and_sort(int ninputs, int index, npy_float64 **inputs, npy_uint8 **masks,
-               npy_float64 temp[MAX_ARRAYS])
+_mask_and_sort(int ninputs, int index, int fill, npy_float64 **inputs,
+               npy_uint8 **masks, npy_float64 temp[MAX_ARRAYS])
 {
     int i, j, goodpix;
     npy_float64 temp2;
@@ -20,6 +20,14 @@ _mask_and_sort(int ninputs, int index, npy_float64 **inputs, npy_uint8 **masks,
         for (i=j=0; i<ninputs; i++) {
             if (masks[i][index] == 0) {
                 temp[j++] = inputs[i][index];
+            }
+        }
+        if (j == 0 && fill == 1) {
+            for (i=0; i<ninputs; i++) {
+                if (inputs[i][index] != 0){
+                    temp[j++] = inputs[i][index];
+                    break;
+                }
             }
         }
     } else {
@@ -42,12 +50,17 @@ _mask_and_sort(int ninputs, int index, npy_float64 **inputs, npy_uint8 **masks,
 
 
 static npy_float64
-_inner_median(int goodpix, int nlow, int nhigh, npy_float64 temp[MAX_ARRAYS])
+_inner_median(int goodpix, int nlow, int nhigh, int ninputs,
+              npy_float64 temp[MAX_ARRAYS])
 {
     npy_float64 median;
     int midpoint, medianpix = goodpix-nhigh-nlow;
     if (medianpix <= 0) {
-        median = 0;
+        if (ninputs > 0) {
+            median = temp[ninputs-1];
+        } else{
+            median = 0;
+        }
     } else {
         midpoint = medianpix / 2;
         if (medianpix % 2) /* odd */ {
@@ -62,13 +75,39 @@ _inner_median(int goodpix, int nlow, int nhigh, npy_float64 temp[MAX_ARRAYS])
 
 
 static npy_float64
-_inner_average(int goodpix, int nlow, int nhigh, npy_float64 temp[MAX_ARRAYS])
+_inner_old_median(int goodpix, int nlow, int nhigh, int ninputs,
+                  npy_float64 temp[MAX_ARRAYS])
+{
+    npy_float64 median;
+    int midpoint, medianpix = goodpix-nhigh-nlow;
+    if (medianpix <= 0) {
+        median = 0;
+    } else {
+        midpoint = medianpix / 2;
+        if (medianpix % 2) /* odd */ {
+            median = temp[ midpoint + nlow ];
+        } else {
+            median = (temp[ midpoint + nlow ] + 
+                  temp[ midpoint + nlow - 1 ]) / 2.0;
+        }    
+    }
+    return median;
+}
+
+
+static npy_float64
+_inner_average(int goodpix, int nlow, int nhigh, int ninputs,
+               npy_float64 temp[MAX_ARRAYS])
 {
     npy_float64 average;
     int i, averagepix = goodpix - nhigh - nlow;
 
     if (averagepix <= 0) {
-        average = 0;
+        if (ninputs > 0) {
+            average = temp[ninputs-1];
+        } else{
+            average = 0;
+        }
     } else {
         for(i=nlow, average=0; i<averagepix+nlow;  i++) {
             average += temp[i];
@@ -80,7 +119,8 @@ _inner_average(int goodpix, int nlow, int nhigh, npy_float64 temp[MAX_ARRAYS])
 
 
 static npy_float64
-_inner_minimum(int goodpix, int nlow, int nhigh, npy_float64 temp[MAX_ARRAYS])
+_inner_minimum(int goodpix, int nlow, int nhigh, int ninputs,
+               npy_float64 temp[MAX_ARRAYS])
 {
     int minimumpix = goodpix - nhigh - nlow;
     if (minimumpix <= 0) {
@@ -93,7 +133,8 @@ _inner_minimum(int goodpix, int nlow, int nhigh, npy_float64 temp[MAX_ARRAYS])
 
 static int
 _combine(combiner f, int dim, int maxdim, int ninputs, int nlow, int nhigh,
-    PyArrayObject *inputs[], PyArrayObject *masks[], PyArrayObject *output)
+         int fillval, PyArrayObject *inputs[], PyArrayObject *masks[],
+         PyArrayObject *output)
 {
     int i, j;
 
@@ -117,8 +158,11 @@ _combine(combiner f, int dim, int maxdim, int ninputs, int nlow, int nhigh,
 
         for(j=0; j<cols; j++) {
             int goodpix = _mask_and_sort(
-                ninputs, j, tinputs, masks ? tmasks : NULL, sorted);
-            toutput[j] = f(goodpix, nlow, nhigh, sorted);
+                ninputs, j, fillval, tinputs, masks ? tmasks : NULL, sorted);
+            if (fillval == 1) fillval = ninputs;
+            toutput[j] = f(goodpix, nlow, nhigh, ninputs, sorted);
+            for (i=0;i<ninputs;i++)
+                sorted[i] = 0;
         }
     } else {
         for (i=0; i<inputs[0]->dimensions[dim]; i++) {
@@ -129,8 +173,8 @@ _combine(combiner f, int dim, int maxdim, int ninputs, int nlow, int nhigh,
                 }
             }
             output->data += output->strides[dim]*i;
-            _combine(f, dim+1, maxdim, ninputs, nlow, nhigh, 
-                inputs, masks, output);
+            _combine(f, dim+1, maxdim, ninputs, nlow, nhigh, fillval,
+                     inputs, masks, output);
             for(j=0; j<ninputs; j++) {
                 inputs[j]->data -= inputs[j]->strides[dim]*i;
                 if (masks) {
@@ -155,6 +199,8 @@ static fmapping functions[] = {
     {"median", _inner_median},
     {"average", _inner_average},
     {"minimum", _inner_minimum},
+    {"imedian", _inner_median},
+    {"iaverage", _inner_average},
 };
 
 
@@ -170,6 +216,8 @@ _Py_combine(PyObject *obj, PyObject *args, PyObject *kw)
     combiner f;
     PyArrayObject *arr[MAX_ARRAYS], *bmk[MAX_ARRAYS], *toutput;
     int i;
+    int fillval = 0;
+    char fname[] = " ";
 
     if (!PyArg_ParseTupleAndKeywords(args, kw, "OO|iiOs:combine", keywds,
              &arrays, &output, &nlow, &nhigh, &badmasks, &kind)) {
@@ -220,12 +268,16 @@ _Py_combine(PyObject *obj, PyObject *args, PyObject *kw)
     for (i=0,f=0; i<(sizeof(functions)/sizeof(functions[0])); i++)
         if  (!strcmp(kind, functions[i].name)) {
             f = functions[i].fptr;
+            strncpy(fname,functions[i].name,1);
+            if (!strcmp(fname,"i")) {
+                fillval = 1;
+            }
             break;
         }
     if (!f)    return PyErr_Format(
         PyExc_ValueError, "Invalid comination function.");
 
-    if (_combine(f, 0, arr[0]->nd, narrays, nlow, nhigh, arr,
+    if (_combine(f, 0, arr[0]->nd, narrays, nlow, nhigh, fillval, arr,
                  (badmasks != Py_None ? bmk : NULL), toutput) < 0) {
         return NULL;
     }
