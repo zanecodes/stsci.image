@@ -30,14 +30,25 @@ def translate(a, sdx, sdy, output=None, mode="nearest", cval=0.0):
     """translate performs a translation of 'a' by (sdx, sdy)
     storing the result in 'output'.
 
-    sdx, sdy  are float values.
-
-    supported 'mode's include:
-        'nearest'   elements beyond boundary come from nearest edge pixel.
-        'wrap'      elements beyond boundary come from the opposite array edge.
-        'reflect'   elements beyond boundary come from reflection on same array
-                    edge.
-        'constant'  elements beyond boundary are set to 'cval'
+    Parameters
+    ----------
+    sdx, sdy : float
+        Value to translate image in x and y, respectively
+        
+    output : ndarray
+        Output array
+        
+    mode : {'nearest','wrap','reflect','constant'}
+        Supported 'mode's include::
+        
+            'nearest'   elements beyond boundary come from nearest edge pixel.
+            'wrap'      elements beyond boundary come from the opposite array edge.
+            'reflect'   elements beyond boundary come from reflection on same array
+                        edge.
+            'constant'  elements beyond boundary are set to 'cval'
+            
+    cval : float
+        Value to use if mode set to 'constant'.
     """
 
     a = np.asarray(a)
