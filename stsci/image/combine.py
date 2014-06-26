@@ -27,49 +27,61 @@ def imedian(arrays, output=None, outtype=None, nlow=0, nhigh=0, badmasks=None):
     identically shaped images, filling pixels with no weight with the value from
     the first input array.
 
-    arrays     specifies a sequence of inputs arrays, which are nominally a
-               stack of identically shaped images.
+    Parameters
+    -----------
+    arrays : list of ndarray
+        A sequence of inputs arrays, which are nominally a stack of identically shaped images.
 
-    output     may be used to specify the output array.  If none is specified,
+    output : ndarray
+         Used to specify the output array.  If none is specified,
                either arrays[0] is copied or a new array of type 'outtype'
                is created.
 
-    outtype    specifies the type of the output array when no 'output' is
-               specified.
+    outtype : dtype
+        The type of the output array when no 'output' is specified.
 
-    nlow       specifies the number of pixels to be excluded from median
-               on the low end of the pixel stack.
+    nlow : int
+        The number of pixels to be excluded from median on the low end of the pixel stack.
 
-    nhigh      specifies the number of pixels to be excluded from median
-               on the high end of the pixel stack.
+    nhigh : int 
+        The number of pixels to be excluded from median on the high end of the pixel stack.
 
-    badmasks   specifies boolean arrays corresponding to 'arrays', where true
+    badmasks : list of ndarrays 
+        Boolean arrays corresponding to 'arrays', where true
                indicates that a particular pixel is not to be included in the
                median calculation.
 
+    Examples
+    ---------
     >>> a = num.arange(4)
     >>> a = a.reshape((2,2))
     >>> arrays = [a*16, a*4, a*2, a*8]
     >>> median(arrays)
     array([[ 0,  6],
            [12, 18]])
+           
     >>> median(arrays, nhigh=1)
     array([[ 0,  4],
            [ 8, 12]])
+           
     >>> median(arrays, nlow=1)
     array([[ 0,  8],
            [16, 24]])
+           
     >>> median(arrays, outtype=num.float32)
     array([[  0.,   6.],
            [ 12.,  18.]], dtype=float32)
+           
     >>> bm = num.zeros((4,2,2), dtype=num.bool8)
     >>> bm[2,...] = 1
     >>> median(arrays, badmasks=bm)
     array([[ 0,  8],
            [16, 24]])
+           
     >>> median(arrays, badmasks=threshhold(arrays, high=25))
     array([[ 0,  6],
            [ 8, 12]])
+
     """
     return _combine_f("imedian", arrays, output, outtype, nlow, nhigh, badmasks)
 
