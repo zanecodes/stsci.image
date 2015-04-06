@@ -34,7 +34,7 @@ def test_threshhold1():
 def test_threshold2():
     a = np.arange(100)
     a = a.reshape((10, 10))
-    result = (combine.threshhold([range(10)] * 10, 3, 7)).astype(np.int8)
+    result = (combine.threshhold([list(range(10))] * 10, 3, 7)).astype(np.int8)
     expected = np.array(
         [[1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
          [1, 1, 1, 0, 0, 0, 0, 1, 1, 1],

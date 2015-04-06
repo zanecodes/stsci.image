@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 
 import numpy as num
 from ._combine import combine as _combine
@@ -384,11 +384,11 @@ def _bench():
     arrays = [a*2, a*64, a*16, a*8]
     t0 = time.clock()
     median(arrays)
-    print "maskless:", time.clock()-t0
+    print("maskless:", time.clock()-t0)
 
     a = num.arange(10**6)
     a = a.reshape((1000, 1000))
     arrays = [a*2, a*64, a*16, a*8]
     t0 = time.clock()
     median(arrays, badmasks=num.zeros((1000,1000), dtype=num.bool8))
-    print "masked:", time.clock()-t0
+    print("masked:", time.clock()-t0)

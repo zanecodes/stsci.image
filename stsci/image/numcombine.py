@@ -37,7 +37,7 @@
 #                     use of numerixenv to reflect sole support for numpy
 
 # Import necessary modules
-from __future__ import division
+from __future__ import division, print_function
 
 import numpy as n
 import stsci.image as image
@@ -135,7 +135,7 @@ class numCombine(object):
 
         # Simple sanity check to make sure that the min/max clipping doesn't throw out all of the pixels.
         if ( (self.__numObjs - (self.__nlow + self.__nhigh)) < self.__nkeep ):
-            raise ValueError, "Rejecting more pixels than specified by the nkeep parameter!"
+            raise ValueError("Rejecting more pixels than specified by the nkeep parameter!")
 
         # Create output numarray object
         self.combArrObj = n.zeros(self.__arrObjectList[0].shape,dtype=self.__arrObjectList[0].dtype )
@@ -158,7 +158,7 @@ class numCombine(object):
         elif ( self.__combinationType.lower() == "minimum"):
             self._minimum()
         else:
-            print "Combination type not supported!!!"
+            print("Combination type not supported!!!")
 
     def _createMaskList(self):
         # Create the threshold masks
@@ -178,7 +178,7 @@ class numCombine(object):
         elif ( (self.__arrMaskList != None) and (__tmpMaskList == None) ):
             self.__masks = self.__arrMaskList
         else:
-            for mask in xrange(len(self.__arrMaskList)):
+            for mask in range(len(self.__arrMaskList)):
                 self.__masks.append(n.logical_or(__tmpMaskList[mask],self.__arrMaskList[mask]))
         del (__tmpMaskList)
         return None
@@ -230,7 +230,7 @@ class numCombine(object):
             errormsg += "#  but no clipping will be used.                #\n"
             errormsg += "#                                               #\n"
             errormsg += "#################################################\n"
-            print errormsg
+            print(errormsg)
 
             # Create the minimum image from the stack of input images.
             # Find the maximum pixel value for the image stack.
@@ -247,11 +247,11 @@ class numCombine(object):
                 __maskSum = self.__sumImages(self.__arrMaskList)
 
                 # For each image, set pixels masked as "bad" to the "super-maximum" value.
-                for imgobj in xrange(len(self.__arrObjectList)):
+                for imgobj in range(len(self.__arrObjectList)):
                     tmp = n.where(self.__arrMaskList[imgobj] == 1,_maxValue+1,self.__arrObjectList[imgobj])
                     tmpList.append(tmp)
             else:
-                for imgobj in xrange(len(self.__arrObjectList)):
+                for imgobj in range(len(self.__arrObjectList)):
                   tmpList.append(imgobj)
 
             # Create the minimum image by computing a median array throwing out all but one of the pixels in the stack
