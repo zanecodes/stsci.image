@@ -1,11 +1,11 @@
 from __future__ import division
 
 import numpy as np
-import stsci.convolve as convolve
-import stsci.convolve._correlate as _correlate
+from scipy.signal import correlate2d
+from scipy import ndimage
 
 
-def _translate(a, dx, dy, output=None, mode="nearest", cval=0.0):
+def _translate(a, dx, dy, output=None, mode="full", cval=0.0):
     """_translate does positive sub-pixel shifts using bilinear
     interpolation.
     """
@@ -23,7 +23,11 @@ def _translate(a, dx, dy, output=None, mode="nearest", cval=0.0):
         [ x, w ],
         ])
 
-    return convolve.correlate2d(a, kernel, output, mode, cval)
+    if output is not None:
+        raise NotImplementedError(
+            'scipy.signal.correlate2d does not accept output keyword')
+
+    return correlate2d(a, kernel, mode=mode, fillvalue=cval)
 
 
 def translate(a, sdx, sdy, output=None, mode="nearest", cval=0.0):
@@ -34,19 +38,19 @@ def translate(a, sdx, sdy, output=None, mode="nearest", cval=0.0):
     ----------
     sdx, sdy : float
         Value to translate image in x and y, respectively
-        
+
     output : ndarray
         Output array
-        
+
     mode : {'nearest','wrap','reflect','constant'}
         Supported 'mode's include::
-        
+
             'nearest'   elements beyond boundary come from nearest edge pixel.
             'wrap'      elements beyond boundary come from the opposite array edge.
             'reflect'   elements beyond boundary come from reflection on same array
                         edge.
             'constant'  elements beyond boundary are set to 'cval'
-            
+
     cval : float
         Value to use if mode set to 'constant'.
     """
@@ -70,9 +74,8 @@ def translate(a, sdx, sdy, output=None, mode="nearest", cval=0.0):
         dx, dy = abs(sdx), abs(sdy)
 
     b = np.rot90(a, rotation)
-    c = _correlate.Shift2d(b, int(dx), int(dy),
-                           mode=convolve.pix_modes[mode])
-    d = _translate(c, dx % 1, dy % 1, output, mode, cval)
+    c = ndimage.shift(b, (int(dx), int(dy)), mode=mode)
+    d = _translate(c, dx % 1, dy % 1, output, 'full', cval)
     if output is not None:
         output._copyFrom(np.rot90(output, -rotation%4))
     else:
