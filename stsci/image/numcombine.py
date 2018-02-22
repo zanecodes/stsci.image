@@ -121,8 +121,8 @@ class numCombine(object):
         lower = None                # Throw out values < lower in a median calculation
         ):
         warnings.warn("The 'numCombine' class is deprecated and may be removed"
-                      " in a future version. Use 'num_combine()' instead of "
-                      "'numCombine' class", DeprecationWarning)
+                      " in a future version. Use 'num_combine()' instead.",
+                      DeprecationWarning)
         # keep code with new variable name
         arrMaskList = numarrayMaskList
 
