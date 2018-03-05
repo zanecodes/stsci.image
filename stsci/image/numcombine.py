@@ -35,42 +35,56 @@
 #
 #      Version 0.5.1: changed variable names from numarray* to arr* and removed
 #                     use of numerixenv to reflect sole support for numpy
-
-# Import necessary modules
-from __future__ import division, print_function
-
-import numpy as n
+#      Version 0.6.0: Modernized code: replacing numCombine class with
+#                     num_combine function.
+from __future__ import (absolute_import, division, unicode_literals,
+                        print_function)
+import warnings
+import numpy as np
 import stsci.image as image
 
-# Version number
-__version__ = '0.5.1'
+__version__ = '0.6.0'
 
 
 class numCombine(object):
-    """ A lite version of the imcombine IRAF task
+    """ **DEPRECATED.** A lite version of the imcombine IRAF task
+
+    .. warn::
+        This class has been deprecated since version 0.6.0 and it will be
+        removed in a future release. Use `num_combine` instead of this
+        class.
 
     Parameters
     ----------
     arrObjectList : list of ndarray
-        A sequence of inputs arrays, which are nominally a stack of identically shaped images.
+        A sequence of inputs arrays, which are nominally a stack of identically
+        shaped images.
+
     numarrayMaskList : list of ndarray
-        A sequence of mask arrays to use for masking out 'bad' pixels from the combination
-        The ndarray should be a numpy array, despite the variable name.
+        A sequence of mask arrays to use for masking out 'bad' pixels from the
+        combination. The ndarray should be a numpy array, despite the
+        variable name.
+
     combinationType : {'median','imedian','iaverage','mean','sum','minimum'}
-        Type of operation should be used to combine the images
-        The 'imedian' and 'iaverage' types ignore pixels which have been flagged
-        as bad in all input arrays and returns the value from the last image in
-        the stack for that pixel.
+        Type of operation should be used to combine the images.
+        The 'imedian' and 'iaverage' types ignore pixels which have been
+        flagged as bad in all input arrays and returns the value from the
+        last image in the stack for that pixel.
+
     nlow : int [Default: 0]
-        Number of low pixels to throw out of the median calculation
+        Number of low pixels to throw out of the median calculation.
+
     nhigh : int [Default: 0]
-        Number of high pixels to throw out of the median calculation
+        Number of high pixels to throw out of the median calculation.
+
     nkeep : int [Default: 1]
-        Minimun number of pixels to keep for a valid computation
+        Minimun number of pixels to keep for a valid computation.
+
     upper : float, optional
-        Throw out values >= to upper in a median calculation
+        Throw out values >= to upper in a median calculation.
+
     lower: float, optional
-        Throw out values < lower in a median calculation
+        Throw out values < lower in a median calculation.
 
     Returns
     -------
@@ -96,7 +110,6 @@ class numCombine(object):
            [ 1.01666665,  1.01666665,  1.01666665,  1.01666665,  1.01666665]], dtype=float32)
 
     """
-
     def __init__(self,
         arrObjectList,         # Specifies a sequence of inputs arrays, which are nominally a stack of identically shaped images.
         numarrayMaskList = None,    #
@@ -107,17 +120,19 @@ class numCombine(object):
         upper = None,               # Throw out values >= to upper in a median calculation
         lower = None                # Throw out values < lower in a median calculation
         ):
-
+        warnings.warn("The 'numCombine' class is deprecated and may be removed"
+                      " in a future version. Use 'num_combine()' instead.",
+                      DeprecationWarning)
         # keep code with new variable name
         arrMaskList = numarrayMaskList
 
         # Convert the input arrays to the type of array used by the numerix layer
         for i in range(len(arrObjectList)):
-            arrObjectList[i] = n.asarray(arrObjectList[i])
+            arrObjectList[i] = np.asarray(arrObjectList[i])
 
         if arrMaskList is not None:
             for i in range(len(arrMaskList)):
-                arrMaskList[i] = n.asarray(arrMaskList[i])
+                arrMaskList[i] = np.asarray(arrMaskList[i])
 
         # define variables
         self.__arrObjectList = arrObjectList
@@ -138,7 +153,7 @@ class numCombine(object):
             raise ValueError("Rejecting more pixels than specified by the nkeep parameter!")
 
         # Create output numarray object
-        self.combArrObj = n.zeros(self.__arrObjectList[0].shape,dtype=self.__arrObjectList[0].dtype )
+        self.combArrObj = np.zeros(self.__arrObjectList[0].shape,dtype=self.__arrObjectList[0].dtype )
 
         # Generate masks if necessary and combine them with the input masks (if any).
         self._createMaskList()
@@ -179,7 +194,7 @@ class numCombine(object):
             self.__masks = self.__arrMaskList
         else:
             for mask in range(len(self.__arrMaskList)):
-                self.__masks.append(n.logical_or(__tmpMaskList[mask],self.__arrMaskList[mask]))
+                self.__masks.append(np.logical_or(__tmpMaskList[mask],self.__arrMaskList[mask]))
         del (__tmpMaskList)
         return None
 
@@ -211,12 +226,13 @@ class numCombine(object):
         # Sum the images in the input list
         #print "* Creating a sum array..."
         for imgobj in self.__arrObjectList:
-            n.add(self.combArrObj,imgobj,self.combArrObj)
+            np.add(self.combArrObj,imgobj,self.combArrObj)
     def _minimum(self):
         # Nominally computes the minimum pixel value for a stack of
         # identically shaped images
         try:
-            # Try using the numarray.images.combine function "minimum" that is available as part of numarray version 1.3
+            # Try using the numarray.images.combine function "minimum" that
+            # is available as part of numarray version 1.3
             image.minimum(self.__arrObjectList,self.combArrObj,nlow=self.__nlow,nhigh=self.__nhigh,badmasks=self.__masks)
         except:
             # If numarray version 1.3 is not installed so that the "minimum" function is not available.  We will create our own minimum images but no clipping
@@ -248,7 +264,7 @@ class numCombine(object):
 
                 # For each image, set pixels masked as "bad" to the "super-maximum" value.
                 for imgobj in range(len(self.__arrObjectList)):
-                    tmp = n.where(self.__arrMaskList[imgobj] == 1,_maxValue+1,self.__arrObjectList[imgobj])
+                    tmp = np.where(self.__arrMaskList[imgobj] == 1,_maxValue+1,self.__arrObjectList[imgobj])
                     tmpList.append(tmp)
             else:
                 for imgobj in range(len(self.__arrObjectList)):
@@ -261,12 +277,119 @@ class numCombine(object):
             # If we have been given masks we need to reset the mask values to 0 in the image
             if (self.__arrMaskList != None):
                 # Reset any pixl at _maxValue + 1 to 0.
-                self.combArrObj = n.where(__maskSum == self.__numObjs, 0, self.combArrObj)
+                self.combArrObj = np.where(__maskSum == self.__numObjs, 0, self.combArrObj)
 
 
     def __sumImages(self,arrObjectList):
         """ Sum a list of numarray objects. """
-        __sum = n.zeros(arrObjectList[0].shape,dtype=arrObjectList[0].dtype)
+        __sum = np.zeros(arrObjectList[0].shape,dtype=arrObjectList[0].dtype)
         for imgobj in arrObjectList:
             __sum += imgobj
         return __sum
+
+
+def num_combine(data, masks=None, combination_type="median",
+                nlow=0, nhigh=0, upper=None, lower=None):
+    """ A lite version of the imcombine IRAF task
+
+    Parameters
+    ----------
+    data : list of 2D numpy.ndarray or a 3D numpy.ndarray
+        A sequence of inputs arrays, which are nominally a stack of identically
+        shaped images.
+
+    masks : list of 2D numpy.ndarray or a 3D numpy.ndarray
+        A sequence of mask arrays to use for masking out 'bad' pixels from the
+        combination. The ndarray should be a numpy array, despite the variable
+        name.
+
+    combinationType : {'median', 'imedian', 'iaverage', 'mean', 'sum', 'minimum'}
+        Type of operation should be used to combine the images.
+        The 'imedian' and 'iaverage' types ignore pixels which have been
+        flagged as bad in all input arrays and returns the value from the last
+        image in the stack for that pixel.
+
+    nlow : int, optional
+        Number of low pixels to throw out of the median calculation.
+
+    nhigh : int, optional
+        Number of high pixels to throw out of the median calculation.
+
+    upper : float, optional
+        Throw out values >= to upper in a median calculation.
+
+    lower : float, optional
+        Throw out values < lower in a median calculation.
+
+    Returns
+    -------
+    comb_arr : numpy.ndarray
+        Combined output array.
+
+    Examples
+    --------
+    This function can be used to create a median image from a stack of images
+    with the following commands:
+
+    >>> import numpy as np
+    >>> from stsci.image import numcombine as nc
+    >>> a = np.ones([5,5],np.float32)
+    >>> b = a - 0.05
+    >>> c = a + 0.1
+    >>> result = nc.numcombine([a,b,c],combinationType='mean')
+    >>> result
+    array([[ 1.01666665,  1.01666665,  1.01666665,  1.01666665,  1.01666665],
+           [ 1.01666665,  1.01666665,  1.01666665,  1.01666665,  1.01666665],
+           [ 1.01666665,  1.01666665,  1.01666665,  1.01666665,  1.01666665],
+           [ 1.01666665,  1.01666665,  1.01666665,  1.01666665,  1.01666665],
+           [ 1.01666665,  1.01666665,  1.01666665,  1.01666665,  1.01666665]],
+           dtype=float32)
+
+    """
+    data = np.asarray(data)
+    if masks is not None:
+        masks = np.asarray(masks)
+
+    # Simple sanity check to make sure that the min/max clipping doesn't throw
+    # out all of the pixels.
+    if data.shape[0] - nlow - nhigh < 1:
+        raise ValueError("Rejecting all pixels due to large 'nval' and/or "
+                         "'nhigh'!")
+
+    # Create output numarray object
+    comb_arr = np.empty_like(data[0])
+
+    # Create the threshold masks if necessary and combine them with the
+    # input masks (if any).
+    if lower is not None or upper is not None:
+        thmasks = image.threshhold(data, low=lower, high=upper)
+        if masks is None:
+            masks = thmasks
+        else:
+            masks = np.logical_or(masks, thmasks)
+
+    # Combine the input images.
+    combination_type = combination_type.lower()
+
+    if combination_type == 'median':
+        image.median(data, comb_arr, comb_arr.dtype, nlow=nlow, nhigh=nhigh,
+                     badmasks=masks)
+    elif combination_type == 'imedian':
+        image.imedian(data, comb_arr, comb_arr.dtype, nlow=nlow, nhigh=nhigh,
+                      badmasks=masks)
+    elif combination_type in ['iaverage', 'imean']:
+        image.iaverage(data, comb_arr, comb_arr.dtype, nlow=nlow, nhigh=nhigh,
+                       badmasks=masks)
+    elif combination_type == 'mean':
+        image.average(data, comb_arr, comb_arr.dtype, nlow=nlow, nhigh=nhigh,
+                      badmasks=masks)
+    elif combination_type == 'sum':
+        np.sum(data, axis=0, out=comb_arr)
+    elif combination_type == 'minimum':
+        image.minimum(data, comb_arr, comb_arr.dtype, nlow=nlow, nhigh=nhigh,
+                      badmasks=masks)
+    else:
+        comb_arr.fill(0)
+        print("Combination type not supported!!!")
+
+    return comb_arr
