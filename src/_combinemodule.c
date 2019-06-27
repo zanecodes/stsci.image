@@ -55,6 +55,17 @@ _inner_median(int goodpix, int nlow, int nhigh, int ninputs,
 {
     npy_float64 median;
     int midpoint, medianpix = goodpix-nhigh-nlow;
+    if (medianpix <= 0 && goodpix > 0) {
+        /*
+         * nhigh/nlow discarded all the good pixels
+         * reduce them until we have something left
+         */
+        while (nhigh+nlow >= goodpix) {
+            if (nhigh > 0) nhigh = nhigh-1;
+            if (nlow > 0) nlow = nlow-1;
+        }
+        medianpix = goodpix-nhigh-nlow;
+    }
     if (medianpix <= 0) {
         if (ninputs > 0) {
             median = temp[ninputs-1];
@@ -87,9 +98,9 @@ _inner_old_median(int goodpix, int nlow, int nhigh, int ninputs,
         if (medianpix % 2) /* odd */ {
             median = temp[ midpoint + nlow ];
         } else {
-            median = (temp[ midpoint + nlow ] + 
+            median = (temp[ midpoint + nlow ] +
                   temp[ midpoint + nlow - 1 ]) / 2.0;
-        }    
+        }
     }
     return median;
 }
