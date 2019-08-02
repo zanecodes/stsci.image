@@ -1,7 +1,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
-#define MAX_ARRAYS 1024
+#define MAX_ARRAYS 1800
 
 static PyObject *_Error;
 
