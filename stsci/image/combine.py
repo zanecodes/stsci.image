@@ -351,10 +351,10 @@ def threshhold(arrays, low=None, high=None, outputs=None):
     arrays = np.asarray(arrays)
 
     if high is None and low is None:
-        return np.zeros_like(arrays, dtype=np.bool)
+        return np.zeros_like(arrays, dtype=bool)
 
     if outputs is None:
-        outputs = np.empty_like(arrays, dtype=np.bool)
+        outputs = np.empty_like(arrays, dtype=bool)
 
     if high is None:
         for k in range(arrays.shape[0]):
